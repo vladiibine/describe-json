@@ -33,7 +33,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    description="ed of looking at JSON objects that contain long arrays? "
+    description="Tired of looking at JSON objects that contain long arrays? "
                 "Fear no more!",
     install_requires=requirements,
     license="MIT license",
