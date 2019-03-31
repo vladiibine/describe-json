@@ -11,32 +11,36 @@ from __future__ import print_function
 import json
 import sys
 import argparse
+import random
 
 
-def get_struct(o, max_array_size, key):
+def get_struct(o, max_array_size, key, randomize):
     if not isinstance(o, (dict, list, tuple, set)):
         return get_scalar_struct(o)
     elif isinstance(o, (list, tuple, set)):
-        return get_array_struct(o, max_array_size, key)
+        return get_array_struct(o, max_array_size, key, randomize)
     elif isinstance(o, dict):
-        return get_object_struct(o, max_array_size, key)
+        return get_object_struct(o, max_array_size, key, randomize)
 
 
 def get_scalar_struct(o):
     return o
 
 
-def get_array_struct(o, max_array_size, key):
+def get_array_struct(o, max_array_size, key, randomize):
     if len(o) > max_array_size:
         return {
             "length": len(o),
-            key: get_struct(o[0], max_array_size, key) if o else None
+            key: get_struct(
+                random.choice(o) if randomize else o[0],
+                max_array_size, key, randomize
+            ) if o else None
         }
     else:
         return o
 
 
-def get_object_struct(o, max_array_size, array_key):
+def get_object_struct(o, max_array_size, array_key, randomize):
     """Transforms data deep data structures recursively, replacing lists/tuples
     with a dict describing how many elements the collection had, and outputting
     the first elem, as an example
@@ -65,7 +69,7 @@ def get_object_struct(o, max_array_size, array_key):
     """
     result = {}
     for key, value in o.items():
-        result[key] = get_struct(value, max_array_size, array_key)
+        result[key] = get_struct(value, max_array_size, array_key, randomize)
 
     return result
 
@@ -94,7 +98,14 @@ def main():
         default='!!!ArrayExample',
         type=str,
     )
-    
+    parser.add_argument(
+        '-r', '--randomize-array-member',
+        help='By default, the library will display only the first member of '
+             'arrays as an example. Setting this flag, will make it so a '
+             'random array member is chosen',
+        action='store_true',
+    )
+
     args = parser.parse_args()
     if not args.file:
         for line in sys.stdin:
@@ -102,6 +113,7 @@ def main():
                 json.loads(line),
                 key=args.key_for_description,
                 max_array_size=args.max_array_size,
+                randomize=args.randomize_array_member,
             )))
     else:
         with open(args.file) as json_file:
@@ -109,6 +121,7 @@ def main():
                 json.load(json_file),
                 key=args.key_for_description,
                 max_array_size=args.max_array_size,
+                randomize=args.randomize_array_member,
             )))
 
 
