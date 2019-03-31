@@ -105,24 +105,40 @@ def main():
              'random array member is chosen',
         action='store_true',
     )
+    parser.add_argument(
+        'json_string',
+        help='A JSON string to parse. You can either provide this, or pipe '
+             'the JSON through.',
+        nargs='?'
+    )
 
     args = parser.parse_args()
+
+    def get_output(json_string):  # using this instead of functools.partial
+        return get_struct(
+            json_string,
+            key=args.key_for_description,
+            max_array_size=args.max_array_size,
+            randomize=args.randomize_array_member,
+        )
+
     if not args.file:
-        for line in sys.stdin:
-            print(json.dumps(get_struct(
-                json.loads(line),
-                key=args.key_for_description,
-                max_array_size=args.max_array_size,
-                randomize=args.randomize_array_member,
-            )))
+        if sys.stdin.isatty() and not args.json_string:
+            parser.print_help()
+        elif args.json_string:
+            print(json.dumps(
+                get_output(
+                    json.loads(args.json_string))))
+        else:
+            for line in sys.stdin:
+                print(json.dumps(
+                    get_output(
+                        json.loads(line))))
     else:
         with open(args.file) as json_file:
-            print(json.dumps(get_struct(
-                json.load(json_file),
-                key=args.key_for_description,
-                max_array_size=args.max_array_size,
-                randomize=args.randomize_array_member,
-            )))
+            print(json.dumps(
+                get_output(
+                    json.load(json_file))))
 
 
 if __name__ == '__main__':
