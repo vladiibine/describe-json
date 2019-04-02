@@ -28,6 +28,13 @@ Installation
 $ pip install describe_json
 
 
+Features
+--------
+This library does 2 things
+
+* Shortens strings. It also displays their length and a md5 hash, so you can know whether multiple strings are equal
+* Displays the length of arrays, and only 1 element, as an example. If arrays have differing elements, too bad, it only displays one element, so you'll never know what the others look like. You can use the `-r` flag, to get a random array element though.
+
 Usage
 -----
 First of all, the tool plays really nicely with `jq`. Use `jq` to format the output of describe_json
