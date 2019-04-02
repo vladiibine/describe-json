@@ -49,6 +49,30 @@ First of all, the tool plays really nicely with `jq`. Use `jq` to format the out
     ]
   }
 
+Outputting jq full paths for later inspection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you took a look at your JSON, and found the data you were looking for, 
+but getting to it with jq will now require a lot of incremental approaches such as 
+the following, you might as well just make `describe_json` help you with that.
+It can automatically calculate the `jq` path, so you don't have to scroll up anymore!
+
+::
+
+    $ echo '{"a": {"b": [{"c": 1}]}}' | jq '.a'
+    $ echo '{"a": {"b": [{"c": 1}]}}' | jq '.a.b'
+    $ echo '{"a": {"b": [{"c": 1}]}}' | jq '.a.b[0]'
+    $ echo '{"a": {"b": [{"c": 1}]}}' | jq '.a.b[0].c'
+
+
+Instead of the above, just use the -j flag, and you'll see full paths for all dict keys
+
+::
+
+    $ describe_json '{"a": {"b": [{"c": 1}]}}' -j
+    {'.a': {'.a.b': [{'.a.b[0].c': 1}]}}
+
+
+
 Basic piping
 ^^^^^^^^^^^^
 
