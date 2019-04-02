@@ -116,6 +116,16 @@ By default, strings longer than 10 characters are truncated, and their md5 hash 
 
 and that's about it! :)
 
+Testing it in development mode
+------------------------------
+There are only doctests for the moment. They will be ran as 1 unit test, but don't worry, there are more than just 1 test.
+
+::
+
+  $ python setup.py test
+
+
+
 Credits
 -------
 
