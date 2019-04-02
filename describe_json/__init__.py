@@ -11,13 +11,17 @@ from __future__ import print_function, unicode_literals
 import json
 import sys
 import argparse
+import string
 import random
 from hashlib import md5
 
 
+ALLOWED_CHARS = set(string.ascii_letters) | set(string.digits)
+
 MAX_STRING_DEFAULT = 10
 MAX_ARRAY_DEFAULT = 1
 RANDOMIZE_DEFAULT = False
+JQ_FULLPATH_KEYS_DEFAULT = False
 
 
 def is_basestring(obj):
@@ -33,13 +37,15 @@ class JSONDescriber(object):
             self,
             max_array_size=MAX_ARRAY_DEFAULT,
             max_string_size=MAX_STRING_DEFAULT,
-            randomize=RANDOMIZE_DEFAULT
+            randomize=RANDOMIZE_DEFAULT,
+            jq_fullpath_keys=JQ_FULLPATH_KEYS_DEFAULT,
     ):
         self.max_array_size = max_array_size
         self.max_string_size = max_string_size
         self.randomize = randomize
+        self.jq_fullpath_keys = jq_fullpath_keys
 
-    def get_struct(self, obj):
+    def get_struct(self, obj, path_elems=''):
         """Entrypoint. Use this function with any object that was json.load-ed
 
         >>> JSONDescriber().get_struct(0)
@@ -72,15 +78,18 @@ class JSONDescriber(object):
         {'e': [{'e': 'f', 'g': 'g', 'h': 'aaaaaaaaaa... len: 12, md5: 45e4812014d83dde5666ebdf5a8ed1ed'}]}
         True
 
+        >>> JSONDescriber(jq_fullpath_keys=True).get_struct({"a": {"b": [{"c": 1}]}})
+        {'.a': {'.a.b': [{'.a.b[0].c': 1}]}}
+
         :param obj:
         :return:
         """
         if not isinstance(obj, (dict, list, tuple, set)):
             return self.get_scalar_struct(obj)
         elif isinstance(obj, (list, tuple, set)):
-            return self.get_array_struct(obj)
+            return self.get_array_struct(obj, path_elems)
         elif isinstance(obj, dict):
-            return self.get_object_struct(obj)
+            return self.get_object_struct(obj, path_elems)
 
     def get_scalar_struct(self, value):
         if is_basestring(value) and len(value) > self.max_string_size:
@@ -91,16 +100,23 @@ class JSONDescriber(object):
             )
         return value
 
-    def get_array_struct(self, array):
+    def get_array_struct(self, array, path_elems=''):
         if len(array) > self.max_array_size:
+            if self.randomize:
+                index = random.randint(0, len(array) - 1)
+            else:
+                index = 0
+
             return [
                 'length: {}; example:'.format(len(array)),
-                self.get_struct(random.choice(array) if self.randomize else array[0])
+                self.get_struct(
+                    array[index], "{}[{}]".format(path_elems, index),
+                )
             ]
         else:
-            return [self.get_struct(elem) for elem in array]
+            return [self.get_struct(elem, "{}[{}]".format(path_elems, idx)) for idx,elem in enumerate(array)]
 
-    def get_object_struct(self, dict_obj):
+    def get_object_struct(self, dict_obj, path_elems=''):
         """Transforms data deep data structures recursively, replacing lists/tuples
         with a dict describing how many elements the collection had, and outputting
         the first elem, as an example
@@ -110,10 +126,19 @@ class JSONDescriber(object):
         """
         result = {}
         for key, value in dict_obj.items():
-            result[key] = self.get_struct(value)
+            usable_key = key if not self.jq_fullpath_keys else "{}.{}".format(path_elems, self._quote_key(key))
+            result[usable_key] = self.get_struct(value, usable_key)
 
         return result
 
+    def _quote_key(self, key):
+        if set(key) - ALLOWED_CHARS:
+            # 1. escape quotes
+            # 2. quote
+            return '"{}"'.format(key.replace('"', '\"'))
+        else:
+            return key
+        
 
 def main():
     parser = argparse.ArgumentParser()
@@ -143,6 +168,13 @@ def main():
         dest='max_string_size',
     )
     parser.add_argument(
+        '-j', '--jq-fullpath-keys',
+        help='Converts keys to full jq path specs. Useful when wanting to '
+            'print afterwards just a specific key',
+        action='store_true',
+        dest='jq_fullpath_keys',
+    )
+    parser.add_argument(
         '-r', '--randomize-array-member',
         help='By default, the library will display only the first member of '
              'arrays as an example. Setting this flag, will make it so a '
@@ -163,6 +195,7 @@ def main():
         max_array_size=args.max_array_size,
         max_string_size=args.max_string_size,
         randomize=args.randomize,
+        jq_fullpath_keys=args.jq_fullpath_keys,
     )
 
     if not args.file:
