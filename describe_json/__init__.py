@@ -7,7 +7,7 @@ echo '{"some_json": "string"}' | describe_json.py
 
 
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import json
 import sys
 import argparse
@@ -87,7 +87,7 @@ class JSONDescriber(object):
             return "{}... len: {}, md5: {}".format(
                 value[:self.max_string_size],
                 len(value),
-                md5(value.encode()).hexdigest()
+                md5(value.encode('utf-8')).hexdigest()
             )
         return value
 
