@@ -47,8 +47,8 @@ Basic piping
 
 ::
 
-  $ echo '{"a": [1, 2, 3, 4]}' | describe_json`
-  {"a": ["length: 4; example:", 1]}`
+  $ echo '{"a": [1, 2, 3, 4]}' | describe_json
+  {"a": ["length: 4; example:", 1]}
 
 Basic array shortening
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -73,7 +73,7 @@ Use a .json file
 ^^^^^^^^^^^^^^^^^^^^^
 ::
 
-  $ cat example.json `
+  $ cat example.json 
   {"key1": ["a", "b", "c"]}
   $ describe_json -f example.json 
   {"key1": ["length: 3; example:", "a"]}
