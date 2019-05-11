@@ -204,10 +204,25 @@ def main():
         elif args.json_string:
             print(json.dumps(
                 json_describer.get_struct(json.loads(args.json_string))))
+
         else:
+            # Do not assume that 1 line = 1 JSON obj.
+            # Instead, allow each JSON to span one or multiple lines
+            lines = []
             for line in sys.stdin:
-                print(json.dumps(
-                    json_describer.get_struct(json.loads(line))))
+                lines.append(line)
+                try:
+                    print(
+                        json.dumps(
+                            json_describer.get_struct(
+                                json.loads('\n'.join(lines))))
+                    )
+
+                    lines = []
+
+                except ValueError as err:
+                    pass
+
     else:
         with open(args.file) as json_file:
             print(json.dumps(
