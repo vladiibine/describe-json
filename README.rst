@@ -15,7 +15,7 @@ Describe JSON
 
 
 Tired of looking at JSON objects that contain long arrays? Fear no more!
-describe_json basically displays your JSON, replacing any arrays with a dictionary that just describes the array.
+describe_json displays your JSON, shortening strings and arrays. It can also produce jq paths for you, so you know what part of the JSON object you're looking at. Check out the examples for the full set of features!
 
 
 
