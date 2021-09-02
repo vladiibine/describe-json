@@ -235,10 +235,10 @@ def main():
                     except ValueError as err:
                         pass
 
-        else:
-            with open(args.file) as json_file:
-                print(json.dumps(
-                    json_describer.get_struct(json.load(json_file))))
+    else:
+        with open(args.file) as json_file:
+            print(json.dumps(
+                json_describer.get_struct(json.load(json_file))))
 
 
 if __name__ == '__main__':
