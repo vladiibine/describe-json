@@ -138,7 +138,7 @@ class JSONDescriber(object):
             return '"{}"'.format(key.replace('"', '\"'))
         else:
             return key
-        
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -209,24 +209,36 @@ def main():
             # Do not assume that 1 line = 1 JSON obj.
             # Instead, allow each JSON to span one or multiple lines
             lines = []
+            num_open_braces = 0
+            num_closed_braces = 0
             for line in sys.stdin:
+                num_open_braces += line.count('{')
+                num_closed_braces += line.count('}')
                 lines.append(line)
-                try:
-                    print(
-                        json.dumps(
-                            json_describer.get_struct(
-                                json.loads('\n'.join(lines))))
-                    )
 
-                    lines = []
+                # this is a performance optimization.
+                # it costs us relatively little to do a char count
+                # but parsing/unparsing huge JSON files, line by line is
+                # extremely costly, comparatively
+                if num_open_braces == num_closed_braces:
+                    try:
+                        print(
+                            json.dumps(
+                                json_describer.get_struct(
+                                    json.loads('\n'.join(lines))))
+                        )
 
-                except ValueError as err:
-                    pass
+                        lines = []
+                        num_open_braces = 0
+                        num_closed_braces = 0
 
-    else:
-        with open(args.file) as json_file:
-            print(json.dumps(
-                json_describer.get_struct(json.load(json_file))))
+                    except ValueError as err:
+                        pass
+
+        else:
+            with open(args.file) as json_file:
+                print(json.dumps(
+                    json_describer.get_struct(json.load(json_file))))
 
 
 if __name__ == '__main__':
